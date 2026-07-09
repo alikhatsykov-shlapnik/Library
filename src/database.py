@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-DB_PATH = "data/library.db"
+DB_PATH = "data/library.db" #как это работает?
 
 def get_connection():
     """
@@ -27,14 +27,14 @@ def init_database():
     cursor = conn.cursor()
 
     #SQL - reqest for create table
-    cursor.execute("""
-        CREATE TABLE IF NOT EXIST books (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            title TEXT NOT NULL,
-            author TEXT NOT NULL,
-            year INTEGER NOT NULL,
-            status TEXT DEFAULT 'в наличии'
-        )
+    cursor.execute("""\
+CREATE TABLE IF NOT EXISTS books (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    title TEXT NOT NULL,
+    author TEXT NOT NULL,
+    year INTEGER NOT NULL,
+    status TEXT DEFAULT 'в наличии'
+)
 """)
     
     #save changes
