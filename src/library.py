@@ -1,5 +1,5 @@
-from database import get_connection, init_database
-from book import Book
+from src.database import get_connection, init_database
+from src.book import Book
 
 class Library:
 
@@ -70,6 +70,7 @@ class Library:
                 )
                 books.append(book)
             return books
+        
         def delete_book(self, book_id):
             """Удаляет книгу по ID"""
             conn = get_connection()
