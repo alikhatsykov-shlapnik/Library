@@ -1,9 +1,12 @@
 from database import get_connection, init_database
 from book import Book
+
 class Library:
+
     def __init__(self):
         """Инициализация библиотеки: создание БД при запуске."""
         init_database()
+
     def add_book(self, title, author, year):
         conn = get_connection()
         cursor = conn.cursor()
@@ -58,7 +61,7 @@ class Library:
 
             books = []
             for row in rows:
-                book = BOOK(
+                book = Book(
                     title=row[1],
                     author=row[2],
                     year=row[3],
@@ -117,7 +120,7 @@ class Library:
             available = cursor.fetchone()[0]
 
             cursor.execute("SELECT COUNT(*) FROM books WHERE status = 'выдана'")
-            borrowed = cursor,fetchone()[0]
+            borrowed = cursor.fetchone()[0]
 
             conn.close()
 
