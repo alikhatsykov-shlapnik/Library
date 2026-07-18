@@ -15,9 +15,12 @@ class Library:
             "INSERT INTO books (title, author, year) VALUES (?, ?, ?)",
             (title, author, year)
         )
+        print("1 выполнен")
         conn.commit()
+        print("2 finish")
 
         book_id = cursor.lastrowid
+        print("3 finish")
         conn.close()
 
         book = Book(title, author, year, book_id)
@@ -31,6 +34,33 @@ class Library:
 
         cursor.execute("SELECT id, title, author, year, status FROM books ORDER BY id")
         rows = cursor.fetchall()
+        
+
+        books = []
+        for row in rows:
+            book = Book(
+                title=row[1],
+                author=row[2],
+                year=row[3],
+                book_id=row[0],
+                status=row[4]
+            )
+            books.append(book)
+        return books
+        
+    def find_books(self, query):
+        """поиск книги по названию, автору или году(частичное совпадение)"""
+        conn = get_connection()
+        cursor = conn.cursor()
+            
+        cursor.execute("""
+            SELECT id, title, author, year, status
+            FROM books
+            WHERE title LIKE? OR author LIKE? OR year LIKE?
+            ORDER BY id
+        """, (f"%{query}%", f"%{query}%", f"%{query}%"))
+
+        rows = cursor.fetchall()
         conn.close()
 
         books = []
@@ -43,90 +73,64 @@ class Library:
                 status=row[4]
             )
             books.append(book)
-            return books
-        def find_books(self, query):
-            """поиск книги по названию, автору или году(частичное совпадение)"""
-            conn = get_connection()
-            cursor = conn.cursor()
+        return books
+        
+    def delete_book(self, book_id):
+        """Удаляет книгу по ID"""
+        conn = get_connection()
+        cursor = conn.cursor()
+
+        cursor.execute("DELETE FROM books WHERE id = ?", (book_id,))
+        conn.commit()
+
+        deleted = cursor.rowcount > 0
+        conn.close()
+
+        if deleted:
+            print(f"Книга с ID {book_id} удалена")
+        else:
+            print(f"Книга с ID {book_id} не найдена")
+
+        return deleted
+        
+    def update_status(self, book_id, new_status):
+        if new_status not in ["в наличии", "выдана"]:
+            print("Неверный статус. Используйте 'в наличии' или 'выдана'")
+            return False
             
-            cursor.execute("""
-                SELECT id, title, author, year, status
-                FROM books
-                WHERE title LIKE? OR author LIKE? OR year LIKE?
-                ORDER BY id
-            """, (f"%{query}%", f"%{query}%", f"%{query}%"))
+        conn = get_connection()
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE books SET status = ? WHERE id = ?",
+            (new_status, book_id)
+        )
+        conn.commit()
 
-            rows = cursor.fetchall()
-            conn.close()
+        updated = cursor.rowcount > 0
+        conn.close()
 
-            books = []
-            for row in rows:
-                book = Book(
-                    title=row[1],
-                    author=row[2],
-                    year=row[3],
-                    book_id=row[0],
-                    status=row[4]
-                )
-                books.append(book)
-            return books
+        print(f"Статус книги ID {book_id} изменен на '{new_status}'" if updated else f"Книга с ID {book_id} не найдена")
+
+        return updated
         
-        def delete_book(self, book_id):
-            """Удаляет книгу по ID"""
-            conn = get_connection()
-            cursor = conn.cursor()
+    def get_stats(self):
+        """Возвращает статистику библиотеки"""
+        conn = get_connection()
+        cursor = conn.cursor()
 
-            cursor.execute("DELETE FROM books WHERE id = ?", (book_id,))
-            conn.commit()
+        cursor.execute("SELECT COUNT(*) FROM books")
+        total = cursor.fetchone()[0]
 
-            deleted = cursor.rowcount > 0
-            conn.close()
+        cursor.execute("SELECT COUNT(*) FROM books WHERE status = 'в наличии'")
+        available = cursor.fetchone()[0]
 
-            if deleted:
-                print(f"Книга с ID {book_id} удалена")
-            else:
-                print(f"Книга с ID {book_id} не найдена")
+        cursor.execute("SELECT COUNT(*) FROM books WHERE status = 'выдана'")
+        borrowed = cursor.fetchone()[0]
 
-            return deleted
-        
-        def update_status(self, book_id, new_status):
-            if new_status not in ["в наличии", "выдана"]:
-                print("Неверный статус. Используйте 'в наличии' или 'выдана'")
-                return False
-            
-            conn = get_connection()
-            cursor = conn.cursor()
-            cursor.execute(
-                "UPDATE books SET status = ? WHERE id = ?",
-                (new_status, book_id)
-            )
-            conn.commit()
+        conn.close()
 
-            updated = cursor.rowcount > 0
-            conn.close()
-
-            print(f"Статус книги ID {book_id} изменен на '{new_status}'" if updated else f"Книга с ID {book_id} не найдена")
-
-            return updated
-        
-        def get_stats(self):
-            """Возвращает статистику библиотеки"""
-            conn = get_connection()
-            cursor = conn.cursor()
-
-            cursor.execute("SELECT COUNT(*) FROM books")
-            total = cursor.fetchone()[0]
-
-            cursor.execute("SELECT COUNT(*) FROM books WHERE status = 'в наличии'")
-            available = cursor.fetchone()[0]
-
-            cursor.execute("SELECT COUNT(*) FROM books WHERE status = 'выдана'")
-            borrowed = cursor.fetchone()[0]
-
-            conn.close()
-
-            return {
-                "total": total,
-                "available": available,
-                "borrowed": borrowed
-            }
+        return {
+            "total": total,
+            "available": available,
+            "borrowed": borrowed
+        }

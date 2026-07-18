@@ -67,8 +67,13 @@ def main():
                     book_id = int(input("ID книги для удаления: "))
                     library.delete_book(book_id)
                 except ValueError:
+                    for book in books:
+                        print(dir(book))
                     print("Введите число!")
                 except Exception as e:
+                    for book in books:
+                        print(dir(book))
+
                     print(f"Ошибка при удалении: {e}")
                     
             elif choice == '3':

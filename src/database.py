@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-DB_PATH = "data/library.db" #как это работает?
+DB_PATH = "data/library.db"
 
 def get_connection():
     """
